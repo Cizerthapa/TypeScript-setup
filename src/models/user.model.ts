@@ -25,4 +25,4 @@ class Person extends Model {
     }
 }
 
-export default Person;
+export default Person; // Make sure to use default export

@@ -22,19 +22,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_typescript_1 = require("sequelize-typescript");
 const dotenv = __importStar(require("dotenv"));
+const path_1 = __importDefault(require("path"));
 dotenv.config(); // Load environment variables from .env file
-// Initialize a new Sequelize instance
+// Ensure environment variables are strings
+const dbPassword = process.env.DB_PASSWORD;
 const sequelize = new sequelize_typescript_1.Sequelize({
-    database: process.env.DB_NAME, // Database name from .env
-    username: process.env.DB_USER, // Username from .env
-    password: process.env.DB_PASS, // Password from .env
-    host: process.env.DB_HOST, // Host from .env
-    port: parseInt(process.env.DB_PORT || '5432'), // Port from .env, default to 5432
-    dialect: 'postgres', // Using PostgreSQL
-    models: [__dirname + '/../models'], // Path to your models
-    logging: false, // Disable logging; set to true to enable
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: dbPassword,
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    dialect: 'postgres',
+    models: [path_1.default.join(__dirname, '/../models/*.model.js')], // Ensure the path is correct
+    logging: false,
 });
 exports.default = sequelize;

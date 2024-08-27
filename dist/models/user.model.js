@@ -50,4 +50,4 @@ __decorate([
 Person = __decorate([
     sequelize_typescript_1.Table
 ], Person);
-exports.default = Person;
+exports.default = Person; // Make sure to use default export
