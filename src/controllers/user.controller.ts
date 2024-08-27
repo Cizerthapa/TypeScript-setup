@@ -1,0 +1,88 @@
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import User from '../models/user.model'; // Import the User model from your models directory
+
+// Environment variables
+const { secretKey, passwordSaltRounds } = process.env;
+
+// User registration
+export const registerUser = async (req: Request, res: Response) => {
+    const { username, password, role, fullname } = req.body;
+
+    try {
+        // Check if user already exists
+        const existingUser = await User.findOne({ where: { username } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, parseInt(passwordSaltRounds as string, 10));
+
+        // Create new user
+        const newUser = await User.create({
+            username,
+            password: hashedPassword,
+            role,
+            fullname
+        });
+
+        // Respond with the created user
+        return res.status(201).json(newUser);
+    } catch (error) {
+        console.error('Error registering user', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+// User login
+export const loginUser = async (req: Request, res: Response) => {
+    const { username, password } = req.body;
+
+    try {
+        // Find user by username
+        const user = await User.findOne({ where: { username } });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Compare passwords
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ username: user.username, role: user.role }, secretKey as string, { expiresIn: '1h' });
+
+        // Respond with the token
+        return res.status(200).json({ token });
+    } catch (error) {
+        console.error('Error logging in user', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+// Get user profile
+export const getUserProfile = async (req: Request, res: Response) => {
+    const { username } = req.query;
+
+    try {
+        // Find user by username
+        const user = await User.findOne({ where: { username: username as string } });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Respond with user profile
+        return res.status(200).json({
+            username: user.username,
+            role: user.role,
+            fullname: user.fullname
+        });
+    } catch (error) {
+        console.error('Error fetching user profile', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
