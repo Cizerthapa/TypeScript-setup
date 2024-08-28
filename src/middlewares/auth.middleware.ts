@@ -13,7 +13,6 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     // Verify the token
     jwt.verify(token, process.env.JWT_SECRET_KEY as string, (err, user) => {
         if (err) return res.status(403).json({ message: 'Forbidden' });
-
         // Add the user to the request object
         req.person = user as Person; // Cast to Person type
         next();

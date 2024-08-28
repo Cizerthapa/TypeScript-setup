@@ -16,6 +16,8 @@ const sequelize = new Sequelize({
   dialect: 'postgres',
   models: [path.join(__dirname, '/../models/*.model.js')], // Ensure the path is correct
   logging: false,
+  quoteIdentifiers: false,
+  // other as wwell
 });
 
 export default sequelize;
