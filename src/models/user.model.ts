@@ -1,28 +1,32 @@
-import { Table, Column, Unique, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
-@Table
+@Table({
+    timestamps: true,
+})
 class Person extends Model {
-    @Unique
-    @Column({ type: DataType.STRING })
-    private _username: string = ''; // Initialize with an empty string
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    username!: string;
 
-    @Column({ type: DataType.STRING })
-    password: string = ''; // Initialize with an empty string
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    password!: string;
 
-    @Column({ type: DataType.STRING })
-    role: string = ''; // Initialize with an empty string
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    role!: string;
 
-    @Column({ type: DataType.STRING })
-    fullname: string = ''; // Initialize with an empty string
-
-    @Column({ type: DataType.STRING })
-    get username(): string {
-        return this._username;
-    }
-
-    set username(value: string) {
-        this.setDataValue('_username', value);
-    }
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    fullname!: string;
 }
 
-export default Person; // Make sure to use default export
+export default Person;

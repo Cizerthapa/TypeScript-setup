@@ -42,6 +42,6 @@ const sequelize = new sequelize_typescript_1.Sequelize({
     models: [path_1.default.join(__dirname, '/../models/*.model.js')], // Ensure the path is correct
     logging: false,
     quoteIdentifiers: false,
-    // other as wwell
+    // other as well
 });
 exports.default = sequelize;

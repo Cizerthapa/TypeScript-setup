@@ -17,26 +17,24 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_model_1 = __importDefault(require("../models/user.model")); // Import the User model from your models directory
 // Environment variables
-const { secretKey, passwordSaltRounds } = process.env;
+const { SECRET_KEY, passwordSaltRounds } = process.env;
+console.log('key :' + SECRET_KEY, 'secret salt rounds :' + passwordSaltRounds);
 // User registration
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, password, role, fullname } = req.body;
     try {
-        // Check if user already exists
         const existingUser = yield user_model_1.default.findOne({ where: { username } });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
         }
-        // Hash the password
         const hashedPassword = yield bcrypt_1.default.hash(password, parseInt(passwordSaltRounds, 10));
-        // Create new user
         const newUser = yield user_model_1.default.create({
             username,
             password: hashedPassword,
             role,
-            fullname
+            fullname,
         });
-        // Respond with the created user
+        console.log('Creating user with:', { username, password: hashedPassword, role, fullname });
         return res.status(201).json(newUser);
     }
     catch (error) {
@@ -60,7 +58,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
         // Generate JWT token
-        const token = jsonwebtoken_1.default.sign({ username: user.username, role: user.role }, secretKey, { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ username: user.username, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
         // Respond with the token
         return res.status(200).json({ token });
     }
@@ -72,7 +70,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.loginUser = loginUser;
 // Get user profile
 const getUserProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { username } = req.query;
+    const username = req.body.username;
     try {
         // Find user by username
         const user = yield user_model_1.default.findOne({ where: { username: username } });

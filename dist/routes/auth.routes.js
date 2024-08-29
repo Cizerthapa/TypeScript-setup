@@ -22,34 +22,58 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.authorizeRole = exports.authenticateToken = void 0;
-const jwt = __importStar(require("jsonwebtoken"));
-// Middleware to verify JWT tokens
-const authenticateToken = (req, res, next) => {
-    // Extract token from Authorization header (format: Bearer <token>)
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    // If no token is provided, respond with 401 Unauthorized
-    if (token == null)
-        return res.status(401).json({ message: 'Unauthorized' });
-    // Verify token using secret key
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-        // If token is invalid or expired, respond with 403 Forbidden
-        if (err)
-            return res.status(403).json({ message: 'Forbidden' });
-        // Add user info to the request object
-        req.person = user;
-        next();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-exports.authenticateToken = authenticateToken;
-// Middleware to check if the user has one of the allowed roles
-const authorizeRole = (roles) => (req, res, next) => {
-    // Check if user exists and if their role is included in allowed roles
-    if (!req.person || !roles.includes(req.person.role)) {
-        return res.status(403).json({ message: 'Forbidden' });
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const jwt = __importStar(require("jsonwebtoken"));
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const user_service_1 = require("../services/user.service");
+const router = (0, express_1.Router)();
+const userService = new user_service_1.UserService();
+// User registration route
+router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username, password, role } = req.body;
+        const user = yield userService.registerUser(username, password, role);
+        return res.status(201).json({ message: 'User registered successfully', user });
     }
-    next();
-};
-exports.authorizeRole = authorizeRole;
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Registration failed' });
+    }
+}));
+// User login route
+router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username, password } = req.body;
+        const user = yield userService.authenticateUser(username, password);
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        const token = jwt.sign({ username: user.username, role: user.role }, process.env.JWT_SECRET_KEY, {
+            expiresIn: '1h',
+        });
+        return res.status(200).json({ message: 'Login successful', token });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Login failed' });
+    }
+}));
+// Protected route example (accessible only to authenticated users)
+router.get('/profile', auth_middleware_1.authenticateToken, (req, res) => {
+    return res.status(200).json({ message: 'Profile accessed', user: req.person });
+});
+// Protected route example (accessible only to users with specific roles)
+router.get('/admin', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRole)(['admin']), (req, res) => {
+    return res.status(200).json({ message: 'Admin accessed', user: req.person });
+});
+exports.default = router;

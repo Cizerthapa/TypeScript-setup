@@ -22,18 +22,28 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorizeRole = exports.authenticateToken = void 0;
 const jwt = __importStar(require("jsonwebtoken"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config(); // Load environment variables from.env file
+if (process.env.SECRET_KEY == null || process.env.SECRET_KEY == undefined) {
+    console.log("Secret key not specified");
+}
+const jwtkey = process.env.SECRET_KEY;
 // Middleware to verify JWT tokens
 const authenticateToken = (req, res, next) => {
     // Extract token from the Authorization header
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
-    if (!token)
-        return res.status(401).json({ message: 'Unauthorized' });
+    if (authHeader == null || authHeader == undefined) {
+        return res.send('Authentication Header Required');
+    }
+    console.log("Key for JWT: " + jwtkey);
     // Verify the token
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
+    jwt.verify(authHeader, process.env.JWT_SECRET_KEY, (err, user) => {
         if (err)
             return res.status(403).json({ message: 'Forbidden' });
         // Add the user to the request object

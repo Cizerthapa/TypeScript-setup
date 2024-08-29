@@ -1,34 +1,31 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/user.model'; // Import the User model from your models directory
+import Person from '../models/user.model'; // Import the User model from your models directory
 
 // Environment variables
-const { secretKey, passwordSaltRounds } = process.env;
+const { SECRET_KEY, passwordSaltRounds } = process.env;
+console.log('key :' + SECRET_KEY, 'secret salt rounds :' + passwordSaltRounds);
 
 // User registration
 export const registerUser = async (req: Request, res: Response) => {
     const { username, password, role, fullname } = req.body;
 
     try {
-        // Check if user already exists
-        const existingUser = await User.findOne({ where: { username } });
+        const existingUser = await Person.findOne({ where: { username } });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, parseInt(passwordSaltRounds as string, 10));
 
-        // Create new user
-        const newUser = await User.create({
+        const newUser = await Person.create({
             username,
             password: hashedPassword,
             role,
-            fullname
+            fullname,
         });
-
-        // Respond with the created user
+        console.log('Creating user with:', { username, password: hashedPassword, role, fullname });
         return res.status(201).json(newUser);
     } catch (error) {
         console.error('Error registering user', error);
@@ -42,7 +39,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
     try {
         // Find user by username
-        const user = await User.findOne({ where: { username } });
+        const user = await Person.findOne({ where: { username } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -54,10 +51,10 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign({ username: user.username, role: user.role }, secretKey as string, { expiresIn: '1h' });
+        const token = jwt.sign({ username: user.username, role: user.role }, SECRET_KEY as string, { expiresIn: '1h' });
 
         // Respond with the token
-        return res.status(200).json({ token });
+        return res.status(200).json({"token": token });
     } catch (error) {
         console.error('Error logging in user', error);
         return res.status(500).json({ message: 'Internal Server Error' });
@@ -66,11 +63,11 @@ export const loginUser = async (req: Request, res: Response) => {
 
 // Get user profile
 export const getUserProfile = async (req: Request, res: Response) => {
-    const { username } = req.query;
+    const username = req.body.username;
 
     try {
         // Find user by username
-        const user = await User.findOne({ where: { username: username as string } });
+        const user = await Person.findOne({ where: { username: username as string } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
