@@ -1,18 +1,41 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, ForeignKey } from 'sequelize-typescript';
+import Person from './user.model'; // Import the Person model if `user_id` references the `Person` model
 
-@Table
+@Table({
+    timestamps: false, // If you don't want `createdAt` and `updatedAt` columns
+})
 class File extends Model {
-    @Column({ type: DataType.STRING, allowNull: false })
-    filename: string = 'file';
+    @Column({
+        type: DataType.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    })
+    id!: number;
 
-    @Column({ type: DataType.STRING, allowNull: false })
-    path: string = '';
+    @ForeignKey(() => Person) // This establishes a foreign key relationship with the Person model
+    @Column({
+        type: DataType.INTEGER,
+        allowNull: false,
+    })
+    user_id!: number;
 
-    @Column({ type: DataType.STRING, allowNull: false })
-    mimetype: string = '';
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    file_name!: string;
 
-    @Column({ type: DataType.BIGINT, allowNull: false })
-    size: number = 0;
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    file_path!: string;
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: false,
+    })
+    uploaded_at!: Date;
 }
 
 export default File;
